@@ -1,4 +1,5 @@
 import os
+import time
 
 
 def run_length_encode(data):
@@ -59,14 +60,20 @@ def main():
         
         with open(file, "rb") as infile:
             data = infile.read()
-    
+
+        start = time.time()
         encoded_data = run_length_encode(data)
+        end = time.time()
+        encoding_time = end - start
     
         with open(f"encoded_{file}", "wb") as outfile:
             outfile.write(encoded_data)
-    
+
+        start = time.time()
         decoded_data = run_length_decode(encoded_data)
-    
+        end = time.time()
+        decoding_time = end - start
+
         with open(f"decoded_{file}", "wb") as outfile:
             outfile.write(decoded_data)
     
@@ -82,6 +89,8 @@ def main():
         print(f"Size reduction from original after decoding: {reduction2:.2f}%")
         print(f"Hence Reproducibility = {reproducibility:.2f}%")
         print(f"Loss = {loss:.2f}%")
+        print("Encoding time: ", encoding_time, " s.")
+        print("Decoding time: ", decoding_time, " s.")
 
     print("Results:")
     print("Positive Compression: Reduction in size")
