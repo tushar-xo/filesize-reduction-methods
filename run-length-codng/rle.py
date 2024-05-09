@@ -1,5 +1,6 @@
 import os
 import time
+import psutil
 
 
 def run_length_encode(data):
@@ -53,34 +54,49 @@ def calculate_size_reduction(original_size, data_size):
     return reduction
 
 
+# Function to monitor CPU utilization and memory usage
+def monitor_resource_usage():
+    cpu_percent = psutil.cpu_percent()
+    memory_usage = psutil.virtual_memory().percent
+    return cpu_percent, memory_usage
+
+
 def main():
     files = ["xor.bin", "GAP5-1RF_Rev07_IV02_old.bin", "GAP5-1RF_Rev08_IV00_new.bin"]
     for file in files:
         print(f"\n\n For file {file} : \n")
-        
+
         with open(file, "rb") as infile:
             data = infile.read()
 
+        # Track CPU and memory usage before compression
+        cpu_before, memory_before = monitor_resource_usage()
         start = time.time()
         encoded_data = run_length_encode(data)
         end = time.time()
         encoding_time = end - start
-    
+
+        # Track CPU and memory usage during compression
+        cpu_during_compression, memory_during_compression = monitor_resource_usage()
         with open(f"encoded_{file}", "wb") as outfile:
             outfile.write(encoded_data)
 
+        # Track CPU and memory usage before decompression
+        cpu_before_decompression, memory_before_decompression = monitor_resource_usage()
         start = time.time()
         decoded_data = run_length_decode(encoded_data)
         end = time.time()
         decoding_time = end - start
 
+        # Track CPU and memory usage during decompression
+        cpu_during_decompression, memory_during_decompression = monitor_resource_usage()
         with open(f"decoded_{file}", "wb") as outfile:
             outfile.write(decoded_data)
-    
+
         original_size = os.stat(file).st_size  # bytes
         encoded_size = os.stat(f"encoded_{file}").st_size  # bytes
         decoded_size = os.stat(f"decoded_{file}").st_size  # bytes
-    
+
         reduction1 = calculate_size_reduction(original_size, encoded_size)
         reduction2 = calculate_size_reduction(original_size, decoded_size)
         loss = reduction2
@@ -91,6 +107,10 @@ def main():
         print(f"Loss = {loss:.2f}%")
         print("Encoding time: ", encoding_time, " s.")
         print("Decoding time: ", decoding_time, " s.")
+        print("CPU utilization during compression:", cpu_during_compression - cpu_before, "%")
+        print("Memory usage during compression:", memory_during_compression - memory_before, "%")
+        print("CPU utilization during decompression:", cpu_during_decompression - cpu_before_decompression, "%")
+        print("Memory usage during decompression:", memory_during_decompression - memory_before_decompression, "%")
 
     print("Results:")
     print("Positive Compression: Reduction in size")
